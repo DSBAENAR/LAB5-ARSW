@@ -1,0 +1,8 @@
+edu.eci.arsw.blueprints
+edu.eci.arsw.blueprints.Controllers
+edu.eci.arsw.blueprints.model
+edu.eci.arsw.blueprints.persistence
+edu.eci.arsw.blueprints.persistence.impl
+edu.eci.arsw.blueprints.services
+edu.eci.arsw.blueprints.services.filters
+edu.eci.arsw.blueprints.services.impl

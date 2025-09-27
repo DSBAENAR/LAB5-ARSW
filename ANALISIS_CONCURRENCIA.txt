@@ -1,0 +1,31 @@
+ANÁLISIS DE CONCURRENCIA
+
+1. Condiciones de carrera posibles:
+   - Al agregar un nuevo plano (blueprint), si dos hilos intentan agregar un plano con el mismo nombre y autor simultáneamente, puede ocurrir que ambos verifiquen que no existe y ambos lo agreguen, violando la unicidad.
+   - Al modificar o eliminar planos, si varios hilos acceden a la misma instancia de la colección subyacente, pueden ocurrir inconsistencias o corrupción de datos.
+
+2. Regiones críticas:
+   - La colección que almacena los blueprints en InMemoryBlueprintPersistence.
+   - Los métodos de agregación, actualización y eliminación de blueprints.
+
+3. Solución aplicada:
+   - Se reemplazó la colección estándar por una colección thread-safe, como ConcurrentHashMap.
+   - Para agregar nuevos blueprints, se utiliza el método atómico putIfAbsent() de ConcurrentHashMap, que garantiza que la verificación y la inserción se realicen de forma atómica, evitando condiciones de carrera sin bloquear toda la colección.
+   - Para actualización y eliminación, se usan los métodos atómicos de la colección thread-safe (replace, remove), evitando bloqueos globales y mejorando el desempeño.
+   - No se usan bloques sincronizados, ya que degradan el rendimiento.
+
+Ejemplo de código aplicado en InMemoryBlueprintPersistence:
+
+private final ConcurrentMap<Tuple<String,String>,Blueprint> blueprints = new ConcurrentHashMap<>();
+
+public void saveBlueprint(Blueprint bp) throws BlueprintPersistenceException {
+    Tuple<String,String> key = new Tuple<>(bp.getAuthor(), bp.getName());
+    if (blueprints.putIfAbsent(key, bp) != null) {
+        throw new BlueprintPersistenceException("The given blueprint already exists.");
+    }
+}
+
+ Para otras operaciones (actualizar, eliminar), se usaron los métodos atómicos de ConcurrentHashMap (replace, remove, etc.) para mantener la seguridad en concurrencia.
+
+Conclusión:
+La solución implementada elimina las condiciones de carrera usando colecciones thread-safe y métodos atómicos, manteniendo el desempeño y la integridad de los datos en un entorno concurrente.
