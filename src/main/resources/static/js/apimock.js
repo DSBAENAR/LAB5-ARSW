@@ -8,6 +8,10 @@ apimock=(function(){
 	 {author:"johnconnor","points":[{"x":340,"y":240},{"x":15,"y":215}],"name":"gear"}];
 	mockdata["maryweyland"]=[{author:"maryweyland","points":[{"x":140,"y":140},{"x":115,"y":115}],"name":"house2"},
 	 {author:"maryweyland","points":[{"x":140,"y":140},{"x":115,"y":115}],"name":"gear2"}];
+     mockdata["michaeljackson"]=[{author:"michaeljackson","points":[{"x":140,"y":140},{"x":115,"y":115}],"name":"house3"},
+	 {author:"michaeljackson","points":[{"x":140,"y":140},{"x":115,"y":115}],"name":"gear3"}];
+     mockdata["darthvader"]=[{author:"darthvader","points":[{"x":140,"y":140},{"x":115,"y":115}],"name":"house4"},
+	 {author:"darthvader","points":[{"x":140,"y":140},{"x":115,"y":115}],"name":"gear4"}];
 
 
 	return {
@@ -27,11 +31,3 @@ apimock=(function(){
 
 })();
 
-/*
-Example of use:
-var fun=function(list){
-	console.info(list);
-}
-
-apimock.getBlueprintsByAuthor("johnconnor",fun);
-apimock.getBlueprintsByNameAndAuthor("johnconnor","house",fun);*/
