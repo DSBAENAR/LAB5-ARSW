@@ -1,11 +1,11 @@
 var App = (function(){
     let blueprints = []
     let currentAuthor = "";
-
+    let api = apiclient
 
     return {
        drawBlueprint: function(author,bpname){
-        apimock.getBlueprintsByNameAndAuthor(author,bpname,function(bp){
+        api.getBlueprintsByNameAndAuthor(author,bpname,function(bp){
             if (!bp){
                 alert("Blueprint not found")
                 return
@@ -30,7 +30,7 @@ var App = (function(){
        },
 
         updateBlueprints: function(author){
-            apimock.getBlueprintsByAuthor(author, function(bps){
+            api.getBlueprintsByAuthor(author, function(bps){
 
             let transformed = bps.map(bp => ({
                 name: bp.name,

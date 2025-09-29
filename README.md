@@ -287,9 +287,46 @@ updateBlueprints: function(author){
 ![alt text](image-4.png)
 ![alt text](image-5.png)
 
-12. Once the application works (front-end only), create a module (call it 'apiclient') that has the same operations as 'apimock', but uses real data queried from the REST API. For this, review how to make GET requests with jQuery, and how callbacks are handled in this context.
+The code above defines a JavaScript module called `apiclient` that provides two operations for interacting with a REST API:
+
+- `getBlueprintsByAuthor(author, callback)`: Makes a GET request to the endpoint `/api/blueprints/{author}` to retrieve all blueprints for the specified author. On success, it calls the provided callback with the data. If the request fails, it shows an alert with an error message.
+- `getBlueprintsByNameAndAuthor(author, name, callback)`: Makes a GET request to `/api/blueprints/{author}/{name}` to retrieve a specific blueprint by author and name. On success, it calls the callback with the blueprint data. On failure, it shows an alert.
+
+Both methods use jQuery's `$.get()` for asynchronous HTTP requests and handle callbacks to process the returned data.
+
+```js
+var apiclient = (function(){
+    const url = "http://localhost:8080/api/blueprints";
+
+    return {
+        getBlueprintsByAuthor: function(author, callback){
+            $.get(url + "/" + author, function(data){
+                callback(data);
+                console.log(data)
+            }).fail(function() {
+                alert("Error retrieving blueprints for author: " + author);
+            });
+        },
+
+        getBlueprintsByNameAndAuthor: function(author, name, callback){
+            $.get(url + "/" + author + "/" + name, function(data){
+                callback(data);
+            }).fail(function() {
+                alert("Error retrieving blueprint: " + name + " for author: " + author);
+            });
+        }
+    }
+})();
+```
 
 13. Modify the app.js code so that it is possible to switch between 'apimock' and 'apiclient' with just one line of code.
 
+In `app.js` I added the next line and used it in the `getBlueprintsByAuthor` and `getBlueprintsByNameAndAuthor` methods
+
+```js
+let api = apiclient
+```
+
 14. Review the documentation and examples of Bootstrap styles (already included in the exercise), and add the necessary elements to the page to make it more visually appealing and closer to the mockup given at the beginning of the instructions.
 
+review `styles.css` file
