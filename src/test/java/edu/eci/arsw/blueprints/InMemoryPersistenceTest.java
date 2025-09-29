@@ -82,6 +82,8 @@ public class InMemoryPersistenceTest {
     public void getAllBlueprints() throws BlueprintPersistenceException, BlueprintNotFoundException {
         InMemoryBlueprintPersistence ibpp = new InMemoryBlueprintPersistence();
 
+        int initialCount = ibpp.getAllBlueprints().size();
+
         Point[] pts1 = new Point[]{new Point(1, 1), new Point(2, 2)};
         Blueprint bp1 = new Blueprint("alice", "paint1", pts1);
 
@@ -96,7 +98,7 @@ public class InMemoryPersistenceTest {
         }
        
 
-        assertEquals(2, ibpp.getAllBlueprints().size(), "There should be two blueprints.");
+        assertEquals(initialCount + 2, ibpp.getAllBlueprints().size(), "There should be " + (initialCount + 2) + " blueprints.");
         assertTrue(ibpp.getAllBlueprints().contains(bp1), "Blueprints should contain bp1.");
         assertTrue(ibpp.getAllBlueprints().contains(bp2), "Blueprints should contain bp2.");
     }
@@ -125,9 +127,8 @@ public class InMemoryPersistenceTest {
     public void getEmptyBlueprints() throws BlueprintPersistenceException{
         InMemoryBlueprintPersistence ibpp = new InMemoryBlueprintPersistence();
 
-        assertThrows(BlueprintPersistenceException.class, () -> {
-            ibpp.getAllBlueprints();
-        });
+        assertFalse(ibpp.getAllBlueprints().isEmpty(), "The blueprint collection should not be empty due to pre-loaded blueprints.");
+        assertEquals(3, ibpp.getAllBlueprints().size(), "There should be exactly 3 pre-loaded blueprints.");
     }
 
 }
