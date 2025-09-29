@@ -2,38 +2,40 @@ var App = (function(){
     let blueprints = []
     let currentAuthor = "";
 
-    function printBlueprints(){
-        const table = document.getElementById("blueprintTable")
-        table.innerHTML = `
-            <tr>
-                <th>Blueprint Name</th>
-                <th>Number of points</th>
-            </tr>
-        `;
-        blueprints.forEach(bp => {
-            let row = `<tr>
-                        <td> ${bp.name}</td>
-                        <td>${bp.points}</td>
-                        </tr>`
-            table.innerHTML += row
-        })
-    }
 
     return {
-        setAuthor : function(author){
-            currentAuthor = author
+        updateBlueprints: function(author){
+            apimock.getBlueprintsByAuthor(author, function(bps){
 
-           apimock.getBlueprintsByAuthor(author, function(bps){
-            if (!bps) {
-                blueprints = [];
-            } else {
-                blueprints = bps.map(bp => ({
-                    name: bp.name,
-                    points: bp.points.length
-                }));
-            }
-            printBlueprints();
-    });
+            let transformed = bps.map(bp => ({
+                name: bp.name,
+                points: bp.points.length
+            }));
+
+           
+            let $table = $("#blueprintTable");
+            $table.empty(); // limpiar la tabla
+            $table.append(`
+                <tr>
+                    <th>Blueprint Name</th>
+                    <th>Number of points</th>
+                </tr>
+            `);
+
+            transformed.map(bp => {
+                let row = `<tr>
+                            <td>${bp.name}</td>
+                            <td>${bp.points}</td>
+                        </tr>`;
+                $table.append(row);
+            });
+
+          
+            let totalPoints = transformed.reduce((acc, bp) => acc + bp.points, 0);
+
+            
+            $("#totalPoints").text(totalPoints);
+        });
         },
 
         setBlueprints : function(blprnts){
@@ -49,5 +51,7 @@ var App = (function(){
         }
     }
 })();
+
+
 
 
