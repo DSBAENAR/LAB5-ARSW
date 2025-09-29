@@ -1,5 +1,5 @@
 var apiclient = (function(){
-    const url = "http://localhost:8080/api/blueprints";
+    const url = "blueprints-e2f7gcd4c0aqcsg2.canadacentral-01.azurewebsites.net";
 
     return {
         getBlueprintsByAuthor: function(author, callback){
