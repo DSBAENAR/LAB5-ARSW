@@ -332,3 +332,4 @@ let api = apiclient
 review `styles.css` file
 
 15. I deployed it to Azure so I modified the url but the functionality is the same
+link: <https://blueprints-e2f7gcd4c0aqcsg2.canadacentral-01.azurewebsites.net>
