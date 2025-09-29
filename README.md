@@ -330,3 +330,5 @@ let api = apiclient
 14. Review the documentation and examples of Bootstrap styles (already included in the exercise), and add the necessary elements to the page to make it more visually appealing and closer to the mockup given at the beginning of the instructions.
 
 review `styles.css` file
+
+15. I deployed it to Azure so I modified the url but the functionality is the same
