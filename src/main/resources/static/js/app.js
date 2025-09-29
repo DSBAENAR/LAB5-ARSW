@@ -4,6 +4,31 @@ var App = (function(){
 
 
     return {
+       drawBlueprint: function(author,bpname){
+        apimock.getBlueprintsByNameAndAuthor(author,bpname,function(bp){
+            if (!bp){
+                alert("Blueprint not found")
+                return
+            }
+            $("#currentBlueprint").text(bp.name);
+            let canvas = document.getElementById("blueprintCanvas");
+            let ctx = canvas.getContext("2d");
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (bp.points.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(bp.points[0].x, bp.points[0].y);
+
+                for (let i = 1; i < bp.points.length; i++) {
+                    ctx.lineTo(bp.points[i].x, bp.points[i].y);
+                }
+
+                ctx.stroke();
+            }
+        })
+       },
+
         updateBlueprints: function(author){
             apimock.getBlueprintsByAuthor(author, function(bps){
 
@@ -14,7 +39,7 @@ var App = (function(){
 
            
             let $table = $("#blueprintTable");
-            $table.empty(); // limpiar la tabla
+            $table.empty(); 
             $table.append(`
                 <tr>
                     <th>Blueprint Name</th>
@@ -26,6 +51,8 @@ var App = (function(){
                 let row = `<tr>
                             <td>${bp.name}</td>
                             <td>${bp.points}</td>
+                            <td><button onclick="App.drawBlueprint('${author}', '${bp.name}')">Draw</button></td>
+
                         </tr>`;
                 $table.append(row);
             });
@@ -51,6 +78,7 @@ var App = (function(){
         }
     }
 })();
+
 
 
 

@@ -182,3 +182,114 @@ When opening the browser's developer console, there should NOT be any 404 error 
 
 </body>
 ```
+
+8. Add a Canvas element to the page, with its respective identifier. Make sure its dimensions are not too large to leave space for the other components, but large enough to 'draw' the blueprints.
+
+```html
+<body>
+
+    <label for="Author">Find Author</label>
+    <input type="text" value="" placeholder="Author" id="inputFindAuthor">
+    <button type="button" id="btnFindAuthor" onclick="App.updateBlueprints($('#inputFindAuthor').val())">Find</button>
+    <table id="blueprintTable">
+        <tr>
+            <th>Blueprint Name</th>
+            <th>Number of points</th>
+            <th>Draw</th>
+        </tr>
+        
+        <tr>
+        <td><strong>Total</strong></td>
+        <td></td>
+        </td>
+        </tr>
+    </table>
+    <p>Total Points: <span id="totalPoints">0</span></p>
+    <p>Drawing: <span id="currentBlueprint">None</span></p>
+    <canvas id="blueprintCanvas" width="500" height="400" style="border:1px solid #000; margin-top:15px;"></canvas>
+    
+```
+
+9. In the app.js module, add an operation that, given an author's name and the name of one of their blueprints as parameters, uses the getBlueprintsByNameAndAuthor method from apimock.js and a callback function to:
+
+- Retrieve the points of the corresponding blueprint, and use them to consecutively draw line segments, making use of HTML5 elements (Canvas, 2DContext, etc.).
+- Update with jQuery the field where the name of the blueprint being drawn is displayed (if this field does not exist, add it to the DOM).
+
+```js
+drawBlueprint: function(author,bpname){
+        apimock.getBlueprintsByNameAndAuthor(author,bpname,function(bp){
+            if (!bp){
+                alert("Blueprint not found")
+                return
+            }
+            $("#currentBlueprint").text(bp.name);
+            let canvas = document.getElementById("blueprintCanvas");
+            let ctx = canvas.getContext("2d");
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (bp.points.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(bp.points[0].x, bp.points[0].y);
+
+                for (let i = 1; i < bp.points.length; i++) {
+                    ctx.lineTo(bp.points[i].x, bp.points[i].y);
+                }
+
+                ctx.stroke();
+            }
+        })
+       }
+```
+
+10. Verify that the application now, in addition to displaying the list of an author's blueprints, allows selecting one of them and graphing it. To do this, make sure the rows generated in step 5 include, in the last column, a button with its click event associated to the previously created operation (sending the corresponding names as parameters).
+
+```js
+updateBlueprints: function(author){
+            apimock.getBlueprintsByAuthor(author, function(bps){
+
+            let transformed = bps.map(bp => ({
+                name: bp.name,
+                points: bp.points.length
+            }));
+
+           
+            let $table = $("#blueprintTable");
+            $table.empty(); 
+            $table.append(`
+                <tr>
+                    <th>Blueprint Name</th>
+                    <th>Number of points</th>
+                </tr>
+            `);
+
+            transformed.map(bp => {
+                let row = `<tr>
+                            <td>${bp.name}</td>
+                            <td>${bp.points}</td>
+                            <td><button onclick="App.drawBlueprint('${author}', '${bp.name}')">Draw</button></td>
+
+                        </tr>`;
+                $table.append(row);
+            });
+
+          
+            let totalPoints = transformed.reduce((acc, bp) => acc + bp.points, 0);
+
+            
+            $("#totalPoints").text(totalPoints);
+        });
+        }
+```
+
+11. Verify that the application now allows: querying an author's blueprints and graphing the one selected.
+
+![alt text](image-4.png)
+![alt text](image-5.png)
+
+12. Once the application works (front-end only), create a module (call it 'apiclient') that has the same operations as 'apimock', but uses real data queried from the REST API. For this, review how to make GET requests with jQuery, and how callbacks are handled in this context.
+
+13. Modify the app.js code so that it is possible to switch between 'apimock' and 'apiclient' with just one line of code.
+
+14. Review the documentation and examples of Bootstrap styles (already included in the exercise), and add the necessary elements to the page to make it more visually appealing and closer to the mockup given at the beginning of the instructions.
+
