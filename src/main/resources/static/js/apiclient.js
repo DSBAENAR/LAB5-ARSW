@@ -50,5 +50,19 @@ var apiclient = (function(){
                 if(callback) callback(err || status || 'error');
             });
         }
+        ,
+
+        postBlueprint: function(blueprint, callback){
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(blueprint)
+            }).done(function(resp){
+                if(callback) callback(null, resp);
+            }).fail(function(jqxhr, status, err){
+                if(callback) callback(err || status || 'error');
+            });
+        }
     }
 })();

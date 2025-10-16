@@ -3,6 +3,7 @@ var App = (function(){
     let currentAuthor = "";
     let currentBlueprint = null; // currently displayed blueprint (in-memory)
     let api = apiclient
+    let isNewBlueprint = false;
 
     return {
        drawBlueprint: function(author,bpname){
@@ -197,30 +198,85 @@ var App = (function(){
             }
             const author = currentBlueprint.author;
             const name = currentBlueprint.name;
-            api.putBlueprint(author, name, currentBlueprint, function(err, resp){
-                if(err){
-                    alert('Error saving blueprint: ' + err);
-                    return;
-                }
-               
-                api.getAllBlueprints(function(getErr, data){
-                    if(getErr){
-                        alert('Error retrieving blueprints after save: ' + getErr);
+
+            if(isNewBlueprint){
+                api.postBlueprint(currentBlueprint, function(postErr, postResp){
+                    if(postErr){
+                        alert('Error creating blueprint: ' + postErr);
                         return;
                     }
-                    blueprints = data;
-
-                    const authorBps = data.filter(b => b.author === author);
-                    const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
-                    $('#totalPoints').text(totalPoints);
-
-                    try{
-                        if($('#inputFindAuthor').val() === author){
-                            App.updateBlueprints(author);
+                    isNewBlueprint = false;
+                    api.getAllBlueprints(function(getErr, data){
+                        if(getErr){
+                            alert('Error retrieving blueprints after create: ' + getErr);
+                            return;
                         }
-                    }catch(e){
-                    }
+                        blueprints = data;
+                        const authorBps = data.filter(b => b.author === author);
+                        const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                        $('#totalPoints').text(totalPoints);
+                        try{ if($('#inputFindAuthor').val() === author){ App.updateBlueprints(author); } }catch(e){}
+                    });
                 });
+            } else {
+                api.putBlueprint(author, name, currentBlueprint, function(err, resp){
+                    if(err){
+                        alert('Error saving blueprint: ' + err);
+                        return;
+                    }
+                    api.getAllBlueprints(function(getErr, data){
+                        if(getErr){
+                            alert('Error retrieving blueprints after save: ' + getErr);
+                            return;
+                        }
+                        blueprints = data;
+                        const authorBps = data.filter(b => b.author === author);
+                        const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                        $('#totalPoints').text(totalPoints);
+                        try{ if($('#inputFindAuthor').val() === author){ App.updateBlueprints(author); } }catch(e){}
+                    });
+                });
+            }
+        },
+
+        /**
+         * Create a new blueprint: clears canvas, prompts for name (and author if missing),
+         * prepares a new currentBlueprint in memory and marks it as new (first Save will POST).
+         */
+        createNewBlueprint: function(){
+            // clear canvas
+            const canvas = document.getElementById('blueprintCanvas');
+            if(canvas){
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+            }
+
+            // determine author
+            let author = $('#inputFindAuthor').val();
+            if(!author){
+                author = prompt('Enter author name for the new blueprint:');
+                if(!author) return; // cancelled
+                $('#inputFindAuthor').val(author);
+            }
+
+            // get new blueprint name
+            const name = prompt('Enter name for the new blueprint:');
+            if(!name) return; // cancelled
+
+            // prepare new blueprint in memory
+            currentBlueprint = { author: author, name: name, points: [] };
+            isNewBlueprint = true;
+            $('#currentBlueprint').text(name);
+
+            // refresh totals for the author (new bp has 0 points)
+            api.getAllBlueprints(function(getErr, data){
+                if(getErr){ console.warn('Could not refresh blueprints after create init:', getErr); return; }
+                blueprints = data;
+                const authorBps = data.filter(b => b.author === author);
+                const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                $('#totalPoints').text(totalPoints);
+                // refresh table if author selected
+                try{ if($('#inputFindAuthor').val() === author){ App.updateBlueprints(author); } }catch(e){}
             });
         }
     }
