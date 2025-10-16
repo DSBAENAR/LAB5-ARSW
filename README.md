@@ -7,7 +7,7 @@ src/main/resources/static
 ```
 
 I noticed that the resources folder was already created, but not in the correct path, so I moved it to `main` and created the corresponding files.
-![alt text](image.png)
+![alt text](img/readmeImgs/image.png)
 
 2. In the previous directory, create the index.html page with only the basics: a title, a field to enter the author's name, a 'Get blueprints' button, a field to display the selected author's name, an HTML table to show the list of blueprints (with only the headers), and a field to display the total number of points for the author's blueprints. Remember to assign identifiers to these components to make them easier to find using selectors.
 
@@ -60,16 +60,16 @@ I noticed that the resources folder was already created, but not in the correct 
 That the page is accessible from:
 ```http://localhost:8080/index.html```
 When opening the browser's developer console, there should NOT be any 404 error messages (i.e., the JavaScript libraries should load correctly).
-![alt text](image-1.png)
+![alt text](img/readmeImgs/image-1.png)
 
 ## Front-End - Lógica
 
 1. Now, create a JavaScript Module that acts as a controller, maintains the state, and provides the operations required by the view. To do this, follow the JavaScript Module pattern and create a module in the path `static/js/app.js`.
 
-![alt text](image-2.png)
+![alt text](img/readmeImgs/image-2.png)
 
 2. Copy the provided module (`apimock.js`) into the same directory as the previously created module. In this file, add more blueprints (with more points) to the hardcoded authors in the code.
-![alt text](image-3.png)
+![alt text](img/readmeImgs/image-3.png)
 
 3. Add the import statements for the two new modules to the HTML page (after the imports for the jQuery and Bootstrap libraries):
 
@@ -284,8 +284,8 @@ updateBlueprints: function(author){
 
 11. Verify that the application now allows: querying an author's blueprints and graphing the one selected.
 
-![alt text](image-4.png)
-![alt text](image-5.png)
+![alt text](img/readmeImgs/image-4.png)
+![alt text](img/readmeImgs/image-5.png)
 
 The code above defines a JavaScript module called `apiclient` that provides two operations for interacting with a REST API:
 
@@ -517,7 +517,7 @@ the button in the html file
 ```
 
 Before:
-![alt text](image-6.png)
+![alt text](img/readmeImgs/image-6.png)
 
 After:
-![alt text](image-7.png)
+![alt text](img/readmeImgs/image-7.png)
