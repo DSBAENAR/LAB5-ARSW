@@ -29,6 +29,75 @@ var App = (function(){
         })
        },
 
+       /**
+        * Initialize canvas event handlers to capture clicks/taps (pointer/mouse/touch).
+        * canvasId: id of the canvas element (e.g. 'blueprintCanvas')
+        */
+       initCanvas: function(canvasId){
+           const canvas = document.getElementById(canvasId);
+           if(!canvas) {
+               console.warn('Canvas not found:', canvasId);
+               return;
+           }
+           const ctx = canvas.getContext('2d');
+
+           function getCanvasRelativePos(evt){
+               const rect = canvas.getBoundingClientRect();
+               let clientX, clientY;
+               if(evt instanceof TouchEvent){
+                   clientX = evt.touches[0].clientX;
+                   clientY = evt.touches[0].clientY;
+               } else if(evt instanceof PointerEvent || evt instanceof MouseEvent){
+                   clientX = evt.clientX;
+                   clientY = evt.clientY;
+               } else {
+                   clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX) || 0;
+                   clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
+               }
+               return {
+                   x: Math.round(clientX - rect.left),
+                   y: Math.round(clientY - rect.top)
+               };
+           }
+
+           function drawMarker(x,y){
+               ctx.save();
+               ctx.fillStyle = 'red';
+               ctx.beginPath();
+               ctx.arc(x,y,3,0,2*Math.PI);
+               ctx.fill();
+               ctx.restore();
+           }
+
+           function handlePointer(e){
+               // Prevent default to avoid synthetic mouse events after touch
+               if(e.preventDefault) e.preventDefault();
+               const pos = getCanvasRelativePos(e);
+               console.log('Canvas click at:', pos);
+               drawMarker(pos.x,pos.y);
+
+               // update total points displayed (increment by 1)
+               const $tp = $('#totalPoints');
+               const current = parseInt($tp.text()) || 0;
+               $tp.text(current + 1);
+           }
+
+           // Use PointerEvent if available
+           if(window.PointerEvent){
+               canvas.addEventListener('pointerdown', handlePointer);
+           } else {
+               // Touch fallback
+               canvas.addEventListener('touchstart', function(e){ handlePointer(e); }, {passive:false});
+               // Mouse fallback
+               canvas.addEventListener('mousedown', handlePointer);
+           }
+
+           // expose a clear function for convenience
+           canvas.clearMarkers = function(){
+               ctx.clearRect(0,0,canvas.width,canvas.height);
+           };
+       },
+
         updateBlueprints: function(author){
             api.getBlueprintsByAuthor(author, function(bps){
 
@@ -78,6 +147,15 @@ var App = (function(){
         }
     }
 })();
+
+// Auto-initialize canvas handlers when page loads
+window.addEventListener('load', function(){
+    try{
+        App.initCanvas('blueprintCanvas');
+    }catch(err){
+        console.warn('Failed to init canvas handlers', err);
+    }
+});
 
 
 

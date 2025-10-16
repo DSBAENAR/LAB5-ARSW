@@ -333,3 +333,86 @@ review `styles.css` file
 
 15. I deployed it to Azure so I modified the url but the functionality is the same
 link: <https://blueprints-e2f7gcd4c0aqcsg2.canadacentral-01.azurewebsites.net>
+
+# PARTE 3
+
+1. Add an event handler to the page canvas that allows you to capture clicks made either with the mouse or via a touchscreen. To do this, consider this example of using ‘PointerEvent’ events (not yet supported by all browsers) for this purpose. Remember that unlike the previous example (where the JS code is embedded in the view), the initialization of event handlers is expected to be properly modularized, as shown in this codepen.
+
+```js
+initCanvas: function(canvasId){
+           const canvas = document.getElementById(canvasId);
+           if(!canvas) {
+               console.warn('Canvas not found:', canvasId);
+               return;
+           }
+           const ctx = canvas.getContext('2d');
+
+           function getCanvasRelativePos(evt){
+               const rect = canvas.getBoundingClientRect();
+               let clientX = 0, clientY = 0;
+
+              
+               if (typeof TouchEvent !== 'undefined' && evt instanceof TouchEvent) {
+                   if (evt.touches && evt.touches.length>0) {
+                       clientX = evt.touches[0].clientX;
+                       clientY = evt.touches[0].clientY;
+                   } else if (evt.changedTouches && evt.changedTouches.length>0) {
+                       clientX = evt.changedTouches[0].clientX;
+                       clientY = evt.changedTouches[0].clientY;
+                   }
+               } else if (typeof PointerEvent !== 'undefined' && evt instanceof PointerEvent) {
+                   clientX = evt.clientX;
+                   clientY = evt.clientY;
+               } else if (typeof MouseEvent !== 'undefined' && evt instanceof MouseEvent) {
+                   clientX = evt.clientX;
+                   clientY = evt.clientY;
+               } else if (evt.touches && evt.touches.length>0) {
+                   clientX = evt.touches[0].clientX;
+                   clientY = evt.touches[0].clientY;
+               } else if (evt.changedTouches && evt.changedTouches.length>0) {
+                   clientX = evt.changedTouches[0].clientX;
+                   clientY = evt.changedTouches[0].clientY;
+               } else if ('clientX' in evt && 'clientY' in evt) {
+                   clientX = evt.clientX;
+                   clientY = evt.clientY;
+               }
+
+               return {
+                   x: Math.round(clientX - rect.left),
+                   y: Math.round(clientY - rect.top)
+               };
+           }
+
+           function drawMarker(x,y){
+               ctx.save();
+               ctx.fillStyle = 'red';
+               ctx.beginPath();
+               ctx.arc(x,y,3,0,2*Math.PI);
+               ctx.fill();
+               ctx.restore();
+           }
+
+           function handlePointer(e){
+               if(e.preventDefault) e.preventDefault();
+               const pos = getCanvasRelativePos(e);
+               console.log('Canvas click at:', pos);
+               drawMarker(pos.x,pos.y);
+
+               const $tp = $('#totalPoints');
+               const current = parseInt($tp.text()) || 0;
+               $tp.text(current + 1);
+           }
+
+           if(window.PointerEvent){
+               canvas.addEventListener('pointerdown', handlePointer);
+           } else {
+               canvas.addEventListener('touchstart', function(e){ handlePointer(e); }, {passive:false});
+
+               canvas.addEventListener('mousedown', handlePointer);
+           }
+
+           canvas.clearMarkers = function(){
+               ctx.clearRect(0,0,canvas.width,canvas.height);
+           };
+       }
+```
