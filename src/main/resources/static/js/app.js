@@ -1,6 +1,7 @@
 var App = (function(){
     let blueprints = []
     let currentAuthor = "";
+    let currentBlueprint = null; // currently displayed blueprint (in-memory)
     let api = apiclient
 
     return {
@@ -11,12 +12,15 @@ var App = (function(){
                 return
             }
             $("#currentBlueprint").text(bp.name);
+            // store the currently opened blueprint in memory
+            currentBlueprint = bp;
             let canvas = document.getElementById("blueprintCanvas");
             let ctx = canvas.getContext("2d");
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (bp.points.length > 0) {
+            // draw lines
+            if (bp.points && bp.points.length > 0) {
                 ctx.beginPath();
                 ctx.moveTo(bp.points[0].x, bp.points[0].y);
 
@@ -25,6 +29,16 @@ var App = (function(){
                 }
 
                 ctx.stroke();
+            }
+
+            // draw markers for points
+            if(bp.points){
+                ctx.fillStyle = 'red';
+                for(let p of bp.points){
+                    ctx.beginPath();
+                    ctx.arc(p.x,p.y,3,0,2*Math.PI);
+                    ctx.fill();
+                }
             }
         })
        },
@@ -43,17 +57,28 @@ var App = (function(){
 
            function getCanvasRelativePos(evt){
                const rect = canvas.getBoundingClientRect();
-               let clientX, clientY;
-               if(evt instanceof TouchEvent){
+               let clientX = 0, clientY = 0;
+
+               // Touch events (mobile)
+               if (evt.touches && evt.touches.length > 0) {
                    clientX = evt.touches[0].clientX;
                    clientY = evt.touches[0].clientY;
-               } else if(evt instanceof PointerEvent || evt instanceof MouseEvent){
+               }
+               // Some browsers use changedTouches for the end of touch
+               else if (evt.changedTouches && evt.changedTouches.length > 0) {
+                   clientX = evt.changedTouches[0].clientX;
+                   clientY = evt.changedTouches[0].clientY;
+               }
+               // Mouse/Pointer events
+               else if (typeof evt.clientX === 'number' && typeof evt.clientY === 'number') {
                    clientX = evt.clientX;
                    clientY = evt.clientY;
-               } else {
-                   clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX) || 0;
-                   clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
                }
+               else if (evt.touches && evt.touches[0]){
+                   clientX = evt.touches[0].clientX || 0;
+                   clientY = evt.touches[0].clientY || 0;
+               }
+
                return {
                    x: Math.round(clientX - rect.left),
                    y: Math.round(clientY - rect.top)
@@ -74,7 +99,34 @@ var App = (function(){
                if(e.preventDefault) e.preventDefault();
                const pos = getCanvasRelativePos(e);
                console.log('Canvas click at:', pos);
-               drawMarker(pos.x,pos.y);
+
+               // Only add point if there's a current blueprint selected
+               if(!currentBlueprint){
+                   console.log('No blueprint selected; ignoring canvas click.');
+                   return;
+               }
+
+               // add the new point to the blueprint in memory (at the end)
+               if(!currentBlueprint.points) currentBlueprint.points = [];
+               currentBlueprint.points.push({x: pos.x, y: pos.y});
+
+               // repaint: clear canvas and redraw lines + markers
+               ctx.clearRect(0,0,canvas.width,canvas.height);
+               if(currentBlueprint.points.length > 0){
+                   ctx.beginPath();
+                   ctx.moveTo(currentBlueprint.points[0].x, currentBlueprint.points[0].y);
+                   for(let i=1;i<currentBlueprint.points.length;i++){
+                       ctx.lineTo(currentBlueprint.points[i].x, currentBlueprint.points[i].y);
+                   }
+                   ctx.stroke();
+               }
+               // draw markers
+               ctx.fillStyle = 'red';
+               for(let p of currentBlueprint.points){
+                   ctx.beginPath();
+                   ctx.arc(p.x,p.y,3,0,2*Math.PI);
+                   ctx.fill();
+               }
 
                // update total points displayed (increment by 1)
                const $tp = $('#totalPoints');
