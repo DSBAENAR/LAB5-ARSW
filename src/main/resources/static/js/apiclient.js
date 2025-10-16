@@ -30,6 +30,11 @@ var apiclient = (function(){
         }
         ,
 
+        /* The `putBlueprint` function in the `apiclient` module is making an AJAX PUT request to the
+        specified URL endpoint with the author and name parameters appended to it. The request
+        includes the `blueprint` data in JSON format. When the request is successful, it invokes the
+        callback function provided with the response data as an argument. If the request fails, it
+        invokes the callback function with an error message indicating the failure. */
         putBlueprint: function(author, name, blueprint, callback){
             $.ajax({
                 url: url + "/" + author + "/" + name,
@@ -43,6 +48,11 @@ var apiclient = (function(){
             });
         },
 
+
+        /* The `getAllBlueprints` function in the `apiclient` module is making an AJAX GET request to the
+        specified URL endpoint. When the request is successful, it invokes the callback function
+        provided with the retrieved data as an argument. If the request fails, it invokes the
+        callback function with an error message indicating the failure. */
         getAllBlueprints: function(callback){
             $.get(url, function(data){
                 if(callback) callback(null, data);
@@ -52,9 +62,15 @@ var apiclient = (function(){
         }
         ,
 
+        /*
+        The method `postBlueprint` in the `apiclient` module is making an AJAX POST request to the specified URL
+        endpoint with the provided `blueprint` data. The data is sent in JSON format. When the request is
+        successful, it invokes the callback function provided with the response data as an argument. If the
+        request fails, it invokes the callback function with an error message indicating the failure.
+        */
         postBlueprint: function(blueprint, callback){
             $.ajax({
-                url: url,
+                url: url + "/blueprint",
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(blueprint)

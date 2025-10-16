@@ -1,11 +1,12 @@
 var App = (function(){
     let blueprints = []
     let currentAuthor = "";
-    let currentBlueprint = null; // currently displayed blueprint (in-memory)
+    let currentBlueprint = null;
     let api = apiclient
     let isNewBlueprint = false;
 
     return {
+         /** Draw the specified blueprint on the canvas and set it as currentBlueprint. */
        drawBlueprint: function(author,bpname){
         api.getBlueprintsByNameAndAuthor(author,bpname,function(bp){
             if (!bp){
@@ -13,14 +14,12 @@ var App = (function(){
                 return
             }
             $("#currentBlueprint").text(bp.name);
-            // store the currently opened blueprint in memory
             currentBlueprint = bp;
             let canvas = document.getElementById("blueprintCanvas");
             let ctx = canvas.getContext("2d");
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // draw lines
             if (bp.points && bp.points.length > 0) {
                 ctx.beginPath();
                 ctx.moveTo(bp.points[0].x, bp.points[0].y);
@@ -32,7 +31,6 @@ var App = (function(){
                 ctx.stroke();
             }
 
-            // draw markers for points
             if(bp.points){
                 ctx.fillStyle = 'red';
                 for(let p of bp.points){
@@ -82,7 +80,7 @@ var App = (function(){
                    y: Math.round(clientY - rect.top)
                };
            }
-
+           /** Draw a small red circle at (x,y) on the canvas */
            function drawMarker(x,y){
                ctx.save();
                ctx.fillStyle = 'red';
@@ -92,6 +90,9 @@ var App = (function(){
                ctx.restore();
            }
 
+           /** Handle pointer/mouse/touch event: add point to current blueprint (if any),
+            * draw it on canvas and update total points counter.
+            */
            function handlePointer(e){
                if(e.preventDefault) e.preventDefault();
                const pos = getCanvasRelativePos(e);
@@ -138,6 +139,9 @@ var App = (function(){
            };
        },
 
+        /** Update the blueprint table for the specified author by querying the API.
+         * Also updates the total points counter for that author.
+         */
         updateBlueprints: function(author){
             api.getBlueprintsByAuthor(author, function(bps){
 
@@ -244,31 +248,26 @@ var App = (function(){
          * prepares a new currentBlueprint in memory and marks it as new (first Save will POST).
          */
         createNewBlueprint: function(){
-            // clear canvas
             const canvas = document.getElementById('blueprintCanvas');
             if(canvas){
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0,0,canvas.width,canvas.height);
             }
 
-            // determine author
             let author = $('#inputFindAuthor').val();
             if(!author){
                 author = prompt('Enter author name for the new blueprint:');
-                if(!author) return; // cancelled
+                if(!author) return; 
                 $('#inputFindAuthor').val(author);
             }
 
-            // get new blueprint name
             const name = prompt('Enter name for the new blueprint:');
-            if(!name) return; // cancelled
+            if(!name) return; 
 
-            // prepare new blueprint in memory
             currentBlueprint = { author: author, name: name, points: [] };
             isNewBlueprint = true;
             $('#currentBlueprint').text(name);
 
-            // refresh totals for the author (new bp has 0 points)
             api.getAllBlueprints(function(getErr, data){
                 if(getErr){ console.warn('Could not refresh blueprints after create init:', getErr); return; }
                 blueprints = data;
