@@ -59,17 +59,14 @@ var App = (function(){
                const rect = canvas.getBoundingClientRect();
                let clientX = 0, clientY = 0;
 
-               // Touch events (mobile)
                if (evt.touches && evt.touches.length > 0) {
                    clientX = evt.touches[0].clientX;
                    clientY = evt.touches[0].clientY;
                }
-               // Some browsers use changedTouches for the end of touch
                else if (evt.changedTouches && evt.changedTouches.length > 0) {
                    clientX = evt.changedTouches[0].clientX;
                    clientY = evt.changedTouches[0].clientY;
                }
-               // Mouse/Pointer events
                else if (typeof evt.clientX === 'number' && typeof evt.clientY === 'number') {
                    clientX = evt.clientX;
                    clientY = evt.clientY;
@@ -95,22 +92,18 @@ var App = (function(){
            }
 
            function handlePointer(e){
-               // Prevent default to avoid synthetic mouse events after touch
                if(e.preventDefault) e.preventDefault();
                const pos = getCanvasRelativePos(e);
                console.log('Canvas click at:', pos);
 
-               // Only add point if there's a current blueprint selected
                if(!currentBlueprint){
                    console.log('No blueprint selected; ignoring canvas click.');
                    return;
                }
 
-               // add the new point to the blueprint in memory (at the end)
                if(!currentBlueprint.points) currentBlueprint.points = [];
                currentBlueprint.points.push({x: pos.x, y: pos.y});
 
-               // repaint: clear canvas and redraw lines + markers
                ctx.clearRect(0,0,canvas.width,canvas.height);
                if(currentBlueprint.points.length > 0){
                    ctx.beginPath();
@@ -120,7 +113,6 @@ var App = (function(){
                    }
                    ctx.stroke();
                }
-               // draw markers
                ctx.fillStyle = 'red';
                for(let p of currentBlueprint.points){
                    ctx.beginPath();
@@ -128,23 +120,18 @@ var App = (function(){
                    ctx.fill();
                }
 
-               // update total points displayed (increment by 1)
                const $tp = $('#totalPoints');
                const current = parseInt($tp.text()) || 0;
                $tp.text(current + 1);
            }
 
-           // Use PointerEvent if available
            if(window.PointerEvent){
                canvas.addEventListener('pointerdown', handlePointer);
            } else {
-               // Touch fallback
                canvas.addEventListener('touchstart', function(e){ handlePointer(e); }, {passive:false});
-               // Mouse fallback
                canvas.addEventListener('mousedown', handlePointer);
            }
 
-           // expose a clear function for convenience
            canvas.clearMarkers = function(){
                ctx.clearRect(0,0,canvas.width,canvas.height);
            };
@@ -197,10 +184,48 @@ var App = (function(){
         getBlueprints: function(){
             return blueprints
         }
+        ,
+
+        /**
+         * Save (PUT) the currently opened blueprint to the API, then refresh all blueprints
+         * and update totals for the current author.
+         */
+        saveCurrentBlueprint: function(){
+            if(!currentBlueprint){
+                alert('No blueprint selected to save.');
+                return;
+            }
+            const author = currentBlueprint.author;
+            const name = currentBlueprint.name;
+            api.putBlueprint(author, name, currentBlueprint, function(err, resp){
+                if(err){
+                    alert('Error saving blueprint: ' + err);
+                    return;
+                }
+               
+                api.getAllBlueprints(function(getErr, data){
+                    if(getErr){
+                        alert('Error retrieving blueprints after save: ' + getErr);
+                        return;
+                    }
+                    blueprints = data;
+
+                    const authorBps = data.filter(b => b.author === author);
+                    const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                    $('#totalPoints').text(totalPoints);
+
+                    try{
+                        if($('#inputFindAuthor').val() === author){
+                            App.updateBlueprints(author);
+                        }
+                    }catch(e){
+                    }
+                });
+            });
+        }
     }
 })();
 
-// Auto-initialize canvas handlers when page loads
 window.addEventListener('load', function(){
     try{
         App.initCanvas('blueprintCanvas');

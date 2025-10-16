@@ -416,3 +416,108 @@ initCanvas: function(canvasId){
            };
        }
 ```
+
+2. Add the necessary functionality to your modules so that when new points are captured on the open canvas (if no canvas is selected, NOTHING should happen):
+
+- The point is added to the end of the sequence of points for the current canvas (only in the application's memory, NOT YET IN THE API!).
+- The drawing is repainted.
+
+```js
+
+               if(!currentBlueprint){
+                   console.log('No blueprint selected; ignoring canvas click.');
+                   return;
+               }
+
+               if(!currentBlueprint.points) currentBlueprint.points = [];
+               currentBlueprint.points.push({x: pos.x, y: pos.y});
+
+               ctx.clearRect(0,0,canvas.width,canvas.height);
+               if(currentBlueprint.points.length > 0){
+                   ctx.beginPath();
+                   ctx.moveTo(currentBlueprint.points[0].x, currentBlueprint.points[0].y);
+                   for(let i=1;i<currentBlueprint.points.length;i++){
+                       ctx.lineTo(currentBlueprint.points[i].x, currentBlueprint.points[i].y);
+                   }
+                   ctx.stroke();
+               }
+               ctx.fillStyle = 'red';
+               for(let p of currentBlueprint.points){
+                   ctx.beginPath();
+                   ctx.arc(p.x,p.y,3,0,2*Math.PI);
+                   ctx.fill();
+               }
+
+               const $tp = $('#totalPoints');
+               const current = parseInt($tp.text()) || 0;
+               $tp.text(current + 1);
+           }
+              if(window.PointerEvent){
+                canvas.addEventListener('pointerdown', handlePointer);
+              } else {
+                canvas.addEventListener('touchstart', function(e){ handlePointer(e); }, {passive:false});
+                canvas.addEventListener('mousedown', handlePointer);
+                }
+              }
+              canvas.clearMarkers = function(){
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                };
+         }
+```
+
+3. Add the Save/Update button. Following the current modular architecture of the client, ensure that when the button is pressed:
+
+- A PUT request is made to the API with the updated blueprint, targeting its corresponding REST resource.
+- A GET request is made to the `/blueprints` resource to retrieve all the blueprints again.
+- The total points for the user are recalculated.
+
+```js
+aveCurrentBlueprint: function(){
+            if(!currentBlueprint){
+                alert('No blueprint selected to save.');
+                return;
+            }
+            const author = currentBlueprint.author;
+            const name = currentBlueprint.name;
+            api.putBlueprint(author, name, currentBlueprint, function(err, resp){
+                if(err){
+                    alert('Error saving blueprint: ' + err);
+                    return;
+                }
+               
+                api.getAllBlueprints(function(getErr, data){
+                    if(getErr){
+                        alert('Error retrieving blueprints after save: ' + getErr);
+                        return;
+                    }
+                    blueprints = data;
+
+                    const authorBps = data.filter(b => b.author === author);
+                    const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                    $('#totalPoints').text(totalPoints);
+
+
+                    try{
+                        if($('#inputFindAuthor').val() === author){
+                            App.updateBlueprints(author);
+                        }
+                    }catch(e){
+                    }
+                });
+            });
+        }
+    }
+})();
+```
+
+the button in the html file
+
+```html
+<button type="button" id="btnSaveBlueprint" onclick="App.saveCurrentBlueprint()">Save</button>
+```
+
+Before:
+![alt text](image-6.png)
+
+After:
+![alt text](image-7.png)

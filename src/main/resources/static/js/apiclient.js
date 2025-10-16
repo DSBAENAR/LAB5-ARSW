@@ -28,5 +28,27 @@ var apiclient = (function(){
                 alert("Error retrieving blueprint: " + name + " for author: " + author);
             });
         }
+        ,
+
+        putBlueprint: function(author, name, blueprint, callback){
+            $.ajax({
+                url: url + "/" + author + "/" + name,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(blueprint)
+            }).done(function(resp){
+                if(callback) callback(null, resp);
+            }).fail(function(jqxhr, status, err){
+                if(callback) callback(err || status || 'error');
+            });
+        },
+
+        getAllBlueprints: function(callback){
+            $.get(url, function(data){
+                if(callback) callback(null, data);
+            }).fail(function(jqxhr, status, err){
+                if(callback) callback(err || status || 'error');
+            });
+        }
     }
 })();
