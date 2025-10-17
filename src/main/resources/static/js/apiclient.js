@@ -80,5 +80,37 @@ var apiclient = (function(){
                 if(callback) callback(err || status || 'error');
             });
         }
+        ,
+
+        /*
+         * Delete a blueprint by author and name. Returns a Promise.
+         */
+        deleteBlueprint: function(author, name){
+            return new Promise(function(resolve, reject){
+                $.ajax({
+                    url: url + "/blueprint" + "/" + name,
+                    type: 'DELETE'
+                }).done(function(resp){
+                    resolve(resp);
+                }).fail(function(jqxhr, status, err){
+                    const body = jqxhr && jqxhr.responseText ? jqxhr.responseText : (err || status || 'error');
+                    reject(body);
+                });
+            });
+        },
+
+        /*
+         * Promise-based wrapper around getAllBlueprints
+         */
+        getAllBlueprintsPromise: function(){
+            return new Promise(function(resolve, reject){
+                $.get(url, function(data){
+                    resolve(data);
+                }).fail(function(jqxhr, status, err){
+                    const body = jqxhr && jqxhr.responseText ? jqxhr.responseText : (err || status || 'error');
+                    reject(body);
+                });
+            });
+        }
     }
 })();

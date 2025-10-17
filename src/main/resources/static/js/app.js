@@ -165,6 +165,7 @@ var App = (function(){
                             <td>${bp.name}</td>
                             <td>${bp.points}</td>
                             <td><button onclick="App.drawBlueprint('${author}', '${bp.name}')">Draw</button></td>
+                            <td><button onclick="App.deleteBlueprint('${author}', '${bp.name}')">Delete</button></td>
 
                         </tr>`;
                 $table.append(row);
@@ -241,6 +242,36 @@ var App = (function(){
                     });
                 });
             }
+        },
+
+        /**
+         * Delete a blueprint: clears canvas, calls DELETE on API, then refreshes all blueprints
+         * and updates totals. Uses promise-based apiclient.deleteBlueprint and getAllBlueprintsPromise.
+         */
+        deleteBlueprint: function(author, name){
+            // Clear canvas immediately
+            const canvas = document.getElementById('blueprintCanvas');
+            if(canvas){
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+            }
+
+            // Call delete API
+            api.deleteBlueprint(author, name)
+            .then(function(resp){
+                // Refresh all blueprints
+                return api.getAllBlueprintsPromise();
+            })
+            .then(function(all){
+                blueprints = all;
+                const authorBps = all.filter(b => b.author === author);
+                const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                $('#totalPoints').text(totalPoints);
+                try{ if($('#inputFindAuthor').val() === author){ App.updateBlueprints(author); } }catch(e){}
+            })
+            .catch(function(err){
+                alert('Error deleting blueprint: ' + err);
+            });
         },
 
         /**
