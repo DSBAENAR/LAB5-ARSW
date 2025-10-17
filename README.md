@@ -566,7 +566,7 @@ createNewBlueprint: function(){
 ```
 
 ![alt text](/img/readmeImgs/image-8.png)
-![alt text](image-9.png)
+![alt text](/img/readmeImgs/image-9.png)
 
 5. Add the 'DELETE' button so that (also using promises):
 
