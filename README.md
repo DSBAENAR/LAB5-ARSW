@@ -521,3 +521,88 @@ Before:
 
 After:
 ![alt text](img/readmeImgs/image-7.png)
+
+4. Add the 'Create new blueprint' button so that when pressed:
+
+- The current canvas is cleared.  
+- The name of the new 'blueprint' is requested (you decide how to prompt for this).
+- This option should modify how the 'save/update' functionality works, as in this case, when pressed for the first time, it should (also using promises):
+
+I. Make a POST request to the `/blueprints` resource to create the new blueprint.  
+II. Make a GET request to the same resource to update the list of blueprints and the user's total points.  
+
+```js
+createNewBlueprint: function(){
+            const canvas = document.getElementById('blueprintCanvas');
+            if(canvas){
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+            }
+
+            let author = $('#inputFindAuthor').val();
+            if(!author){
+                author = prompt('Enter author name for the new blueprint:');
+                if(!author) return; 
+                $('#inputFindAuthor').val(author);
+            }
+
+            const name = prompt('Enter name for the new blueprint:');
+            if(!name) return; 
+
+            currentBlueprint = { author: author, name: name, points: [] };
+            isNewBlueprint = true;
+            $('#currentBlueprint').text(name);
+
+            api.getAllBlueprints(function(getErr, data){
+                if(getErr){ console.warn('Could not refresh blueprints after create init:', getErr); return; }
+                blueprints = data;
+                const authorBps = data.filter(b => b.author === author);
+                const totalPoints = authorBps.reduce((acc,bp) => acc + (bp.points?bp.points.length:0), 0);
+                $('#totalPoints').text(totalPoints);
+                // refresh table if author selected
+                try{ if($('#inputFindAuthor').val() === author){ App.updateBlueprints(author); } }catch(e){}
+            });
+        }
+```
+
+![alt text](/img/readmeImgs/image-8.png)
+![alt text](image-9.png)
+
+5. Add the 'DELETE' button so that (also using promises):
+
+Clear the canvas.  
+
+- Make a DELETE request to the corresponding resource.  
+- Make a GET request to retrieve the now available blueprints.  
+
+```js
+deleteBlueprint: function(author, name){
+            return new Promise(function(resolve, reject){
+                $.ajax({
+                    url: url + "/blueprint" + "/" + name,
+                    type: 'DELETE'
+                }).done(function(resp){
+                    resolve(resp);
+                }).fail(function(jqxhr, status, err){
+                    const body = jqxhr && jqxhr.responseText ? jqxhr.responseText : (err || status || 'error');
+                    reject(body);
+                });
+            });
+        }
+```
+
+```js
+transformed.map(bp => {
+                let row = `<tr>
+                            <td>${bp.name}</td>
+                            <td>${bp.points}</td>
+                            <td><button onclick="App.drawBlueprint('${author}', '${bp.name}')">Draw</button></td>
+                            <td><button onclick="App.deleteBlueprint('${author}', '${bp.name}')">Delete</button></td>
+
+                        </tr>`;
+                $table.append(row);
+            });
+````
+
+![alt text](/img/readmeImgs/image-9.png)
+![alt text](/img/readmeImgs/image-10.png)
